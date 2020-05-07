@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 from Xlib import display
 import array
 import glob
@@ -47,11 +47,11 @@ def get_v4l2loopback_dev():
     v4l2_devs = glob.glob("/dev/video*")
     for v4l2_dev in v4l2_devs:
         v4l2_fd = open(v4l2_dev, "rb")
-        buf_drv = array.array('c', ' ' * 16)
+        buf_drv = array.array('b', (' ' * 16).encode())
         # 2154321408 means VIDIOC_QUERYCAP defined in videodev2.h
         res = fcntl.ioctl(v4l2_fd, 2154321408, buf_drv)
         if res == 0:
-            drv_name = buf_drv.tostring().replace('\x00', '')
+            drv_name = buf_drv.tobytes().decode().replace('\x00', '')
             if drv_name == 'v4l2 loopback':
                 v4l2_fd.close()
                 return v4l2_dev
@@ -89,7 +89,7 @@ def main():
     v4l2loopback_dev = get_v4l2loopback_dev()
     if v4l2loopback_dev is None:
         sys.exit(1)
-    ffmpeg_cmd = ['ffmpeg', '-f', 'x11grab', '-framerate', '30', '-video_size',
+    ffmpeg_cmd = ['ffmpeg', '-f', 'x11grab', '-framerate', '25', '-video_size',
                   '%dx%d' % (selected_screen.width, selected_screen.height),
                   '-i', ':0.0+%d,%d' % (selected_screen.x, selected_screen.y),
                   '-f', 'v4l2', '-vcodec', 'rawvideo', '-pix_fmt', 'rgb24',
